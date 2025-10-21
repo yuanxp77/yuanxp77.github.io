@@ -771,7 +771,7 @@
         let dragOffset = { x: 0, y: 0 };
         
         // 布局持久化
-        const LAYOUT_STORAGE_KEY = 'antool_layout_state';
+        const LAYOUT_STORAGE_KEY = 'devtool_layout_state';
         
         // 时区数据
         const timezoneData = [
@@ -849,9 +849,9 @@
                 openTabs = [...savedTabs];
                 updateDisplay();
             } else {
-                // 默认打开Spex和Tools工具
-                openTab('spex');
+                // 默认打开Tools和Spex工具
                 openTab('tools');
+                openTab('spex');
             }
             
             // 3秒后显示提示（仅在没有tab时显示）
@@ -1236,6 +1236,19 @@
                                     }
                                 }
                             }
+                        } else if (tab === 'spex') {
+                            // 找到对应的tabId
+                            const tabGroup = document.querySelector(`.tab-editor-group[data-tab="${tab}"]`);
+                            if (tabGroup) {
+                                const editorPane = tabGroup.querySelector('.editor-pane');
+                                if (editorPane) {
+                                    const spexInput = editorPane.querySelector('[id^="spex-input-"]');
+                                    if (spexInput) {
+                                        const tabId = spexInput.id.split('-').pop();
+                                        setupSpexClipboardAutoPaste(tabId);
+                                    }
+                                }
+                            }
                         }
                     });
                 }, 200);
@@ -1268,10 +1281,6 @@
                                 <input type="text" id="spex-input-${tabId}" placeholder="输入cmd，如: a.b.c.get_product_info" oninput="debounceConvert('${tabId}')">
                             </div>
                             <div class="result" id="spex-result-${tabId}"></div>
-                            <div style="margin-top: 8px;">
-                                <button class="btn" onclick="getFromClipboard('${tabId}')">从剪贴板获取</button>
-                                <button class="btn" onclick="copyToClipboard('${tabId}')">复制到剪贴板</button>
-                            </div>
                         </div>
                     `;
                 case 'test':
@@ -1356,9 +1365,9 @@
                 const text = input.value;
                 if (text.trim()) {
                     const converted = toCamelCase(text);
-                    result.textContent = converted;
+                    result.innerHTML = `<div style="padding-right: 50px; min-height: 20px; display: flex; align-items: center;">${converted}</div><button class="result-copy" onclick="copyToClipboard('${tabId}')">复制</button>`;
                 } else {
-                    result.textContent = '';
+                    result.innerHTML = '';
                 }
             }
         }
@@ -1383,28 +1392,19 @@
         }
 
         // 剪贴板功能
-        async function getFromClipboard(tabId) {
-            try {
-                const text = await navigator.clipboard.readText();
-                const input = document.getElementById(`spex-input-${tabId}`);
-                if (input) {
-                    input.value = text;
-                    convertText(tabId);
-                    showToast('已从剪贴板获取内容', 'success');
-                }
-            } catch (err) {
-                showToast('无法访问剪贴板', 'error');
-            }
-        }
 
         async function copyToClipboard(tabId) {
             try {
                 const result = document.getElementById(`spex-result-${tabId}`);
-                if (result && result.textContent.trim() !== '') {
-                    await navigator.clipboard.writeText(result.textContent);
-                    showToast('已复制到剪贴板', 'success');
-                } else {
-                    showToast('没有内容可复制', 'error');
+                if (result) {
+                    // 获取文本内容，排除按钮文本
+                    const textContent = result.textContent.replace('复制', '').trim();
+                    if (textContent) {
+                        await navigator.clipboard.writeText(textContent);
+                        showToast('已复制到剪贴板', 'success');
+                    } else {
+                        showToast('没有内容可复制', 'error');
+                    }
                 }
             } catch (err) {
                 showToast('复制失败', 'error');
@@ -1536,7 +1536,6 @@
                     if (result) {
                         input.value = result.value;
                         updateAllTimezones(tabId);
-                        showToast(`已自动识别并粘贴${result.type === 'timestamp' ? '时间戳' : '日期'}`, 'success');
                     } else {
                         // 如果不是时间戳或日期，正常粘贴
                         input.value = clipboardText;
@@ -1560,7 +1559,78 @@
                         // 如果输入框为空且剪贴板是时间戳或日期，自动填充
                         input.value = result.value;
                         updateAllTimezones(tabId);
-                        showToast(`已自动识别并填充${result.type === 'timestamp' ? '时间戳' : '日期'}`, 'success');
+                    }
+                } catch (err) {
+                    // 忽略剪贴板读取错误
+                }
+            });
+        }
+
+        // 为spex工具设置剪贴板自动粘贴功能
+        function setupSpexClipboardAutoPaste(tabId) {
+            const input = document.getElementById(`spex-input-${tabId}`);
+            if (!input) return;
+
+            // 监听粘贴事件
+            input.addEventListener('paste', async (e) => {
+                e.preventDefault();
+                try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    
+                    // 检查字符长度限制
+                    if (clipboardText.length > 1024) {
+                        const result = document.getElementById(`spex-result-${tabId}`);
+                        if (result) {
+                            result.innerHTML = `<div style="color: #ff6b6b; padding: 10px; background: #2d2d30; border-radius: 4px; border-left: 4px solid #ff6b6b;">
+                                <strong>错误：</strong>剪贴板内容过长（${clipboardText.length}字符），超过1024字符限制
+                            </div>`;
+                        }
+                        showToast('剪贴板内容过长，已显示错误提示', 'error');
+                        return;
+                    }
+                    
+                    // 如果长度符合要求，正常粘贴
+                    input.value = clipboardText;
+                    convertText(tabId);
+                } catch (err) {
+                    // 如果无法读取剪贴板，使用默认粘贴行为
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    if (pastedText.length > 1024) {
+                        const result = document.getElementById(`spex-result-${tabId}`);
+                        if (result) {
+                            result.innerHTML = `<div style="color: #ff6b6b; padding: 10px; background: #2d2d30; border-radius: 4px; border-left: 4px solid #ff6b6b;">
+                                <strong>错误：</strong>剪贴板内容过长（${pastedText.length}字符），超过1024字符限制
+                            </div>`;
+                        }
+                        showToast('剪贴板内容过长，已显示错误提示', 'error');
+                        return;
+                    }
+                    input.value = pastedText;
+                    convertText(tabId);
+                }
+            });
+
+            // 监听焦点事件，检查剪贴板内容
+            input.addEventListener('focus', async () => {
+                try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    
+                    if (clipboardText && input.value === '') {
+                        // 检查字符长度限制
+                        if (clipboardText.length > 1024) {
+                            const result = document.getElementById(`spex-result-${tabId}`);
+                            if (result) {
+                                result.innerHTML = `<div style="color: #ff6b6b; padding: 10px; background: #2d2d30; border-radius: 4px; border-left: 4px solid #ff6b6b;">
+                                    <strong>错误：</strong>剪贴板内容过长（${clipboardText.length}字符），超过1024字符限制
+                                </div>`;
+                            }
+                            showToast('剪贴板内容过长，已显示错误提示', 'error');
+                            return;
+                        }
+                        
+                        // 如果输入框为空且剪贴板内容符合要求，自动填充
+                        input.value = clipboardText;
+                        convertText(tabId);
                     }
                 } catch (err) {
                     // 忽略剪贴板读取错误
