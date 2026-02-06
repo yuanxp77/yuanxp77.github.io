@@ -1,3 +1,6 @@
 2026-02-06 10:44:35 main.py:69 [INFO] 歌单: for download
 
 2026-02-06 10:44:35 main.py:179 [INFO] 歌单中包含的歌曲有: ['My Dude']
+2026-02-06 10:47:33 main.py:69 [INFO] 歌单: for download
+
+2026-02-06 10:47:33 main.py:179 [INFO] 歌单中包含的歌曲有: ['My Dude']
