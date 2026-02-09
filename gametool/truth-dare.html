@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 60px 15px 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .game-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .game-btn {
+            padding: 12px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .game-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .game-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Tooltip样式 */
+        .game-btn::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            margin-bottom: 8px;
+            z-index: 10;
+            font-weight: normal;
+        }
+
+        /* PC端hover显示 */
+        @media (hover: hover) {
+            .game-btn:hover::after {
+                opacity: 1;
+            }
+        }
+
+        /* 移动端点击显示 */
+        .game-btn.show-tip::after {
+            opacity: 1;
+        }
+
+        .settings-panel {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        .setting-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .rating-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .rating-btn {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .rating-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .rating-btn:active {
+            transform: scale(0.95);
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .card-content {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #333;
+            min-height: 120px;
+            max-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            width: 100%;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .card-content:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .card-content.has-content {
+            cursor: pointer;
+        }
+
+        .card-content.no-content {
+            cursor: default;
+        }
+
+        .translated-text {
+            font-size: 1.2rem;
+            color: #333;
+            position: relative;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .original-text {
+            font-size: 0.95rem;
+            color: #666;
+            font-style: italic;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: none;
+            margin-top: 10px;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .original-text.show {
+            display: block;
+        }
+
+        .toggle-lang-btn {
+            background: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-lang-btn:active {
+            transform: scale(0.95);
+        }
+
+        .toggle-lang-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .difficulty-easy, .difficulty-pg {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty-medium, .difficulty-pg13 {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty-hard, .difficulty-r {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .translated-text {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .original-text {
+            font-size: 0.95rem;
+            color: #666;
+            font-style: italic;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: none;
+            margin-top: 10px;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .original-text.show {
+            display: block;
+        }
+
+        .toggle-lang-btn {
+            background: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-lang-btn:active {
+            transform: scale(0.95);
+        }
+
+        .toggle-lang-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .difficulty-easy, .difficulty-pg {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty-medium, .difficulty-pg13 {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty-hard, .difficulty-r {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .draw-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .draw-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .draw-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 400px) {
+            .card {
+                padding: 30px 20px;
+                height: 260px;
+            }
+
+            .card-content {
+                font-size: 1.1rem;
+                min-height: 100px;
+                max-height: 100px;
+            }
+
+            .draw-btn {
+                padding: 15px;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← 返回</a>
+    
+    <div class="container">
+        <div class="game-selector">
+            <button class="game-btn active" data-game="truth" id="truthBtn" data-tip="指定一个人回答私密问题">
+                💭 真心话
+            </button>
+            <button class="game-btn" data-game="dare" id="dareBtn" data-tip="指定一个人完成挑战任务">
+                🎯 大冒险
+            </button>
+            <button class="game-btn" data-game="wyr" id="wyrBtn" data-tip="二选一困境，选择更愿意的选项">
+                🤔 你更愿意
+            </button>
+            <button class="game-btn" data-game="paranoia" id="paranoiaBtn" data-tip="选择在场某个人作为答案">
+                👉 我认为
+            </button>
+        </div>
+
+        <div class="settings-panel">
+            <div class="setting-row">
+                <span class="setting-label">难度级别</span>
+                <div class="rating-selector">
+                    <button class="rating-btn" data-rating="pg">轻松</button>
+                    <button class="rating-btn active" data-rating="pg13">适中</button>
+                    <button class="rating-btn" data-rating="r">刺激</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon" id="cardIcon">💭</div>
+            <div class="card-content no-content" id="cardContent">
+                点击下方按钮开始抽取
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="draw-btn" id="drawBtn">
+                🎲 抽取
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentGame = 'truth';
+        let currentQuestion = null;
+        let currentRating = 'pg13';
+        let showOriginal = false;
+        let originalEnglishText = '';
+        let translatedChineseText = '';
+
+        // 缓存DOM元素引用，避免重复查询
+        const elements = {};
+
+        // 游戏配置
+        const gameConfig = {
+            truth: {
+                name: '真心话',
+                icon: '💭',
+                apiEndpoint: '/truth',
+                color: '#667eea'
+            },
+            dare: {
+                name: '大冒险',
+                icon: '🎯',
+                apiEndpoint: '/dare',
+                color: '#764ba2'
+            },
+            wyr: {
+                name: '你更愿意',
+                icon: '🤔',
+                apiEndpoint: '/wyr',
+                color: '#f093fb'
+            },
+            paranoia: {
+                name: '我认为',
+                icon: '👉',
+                apiEndpoint: '/paranoia',
+                color: '#fa709a'
+            }
+        };
+
+        // 难度映射（避免重复创建对象）
+        const difficultyMap = {
+            'pg': '轻松',
+            'pg13': '适中',
+            'r': '刺激',
+            'PG': '轻松',
+            'PG13': '适中',
+            'R': '刺激'
+        };
+
+        // 切换游戏类型
+        function switchGame(game) {
+            currentGame = game;
+            currentQuestion = null;
+            showOriginal = false;
+            originalEnglishText = '';
+            translatedChineseText = '';
+            
+            // 更新按钮状态
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.game === game);
+            });
+            
+            // 更新图标
+            const config = gameConfig[game];
+            elements.cardIcon.textContent = config.icon;
+            elements.cardContent.textContent = '点击下方按钮开始抽取';
+            elements.cardContent.classList.remove('has-content');
+            elements.cardContent.classList.add('no-content');
+        }
+        
+        // 切换语言显示（点击文字切换）
+        function toggleLanguage() {
+            if (!originalEnglishText || !translatedChineseText) return;
+            
+            showOriginal = !showOriginal;
+            
+            if (showOriginal) {
+                elements.cardContent.textContent = originalEnglishText;
+            } else {
+                elements.cardContent.textContent = translatedChineseText;
+            }
+        }
+        
+        // 翻译文本（使用Google Translate免费API）
+        async function translateText(text) {
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh&dt=t&q=${encodeURIComponent(text)}`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('翻译失败');
+                }
+                
+                const data = await response.json();
+                
+                if (data?.[0]?.[0]?.[0]) {
+                    return data[0].map(item => item[0]).join('');
+                } else {
+                    throw new Error('翻译数据格式错误');
+                }
+            } catch (error) {
+                console.error('翻译错误:', error);
+                return `${text}\n\n（翻译失败，显示原文）`;
+            }
+        }
+        
+        // 切换难度级别
+        function switchRating(rating) {
+            currentRating = rating;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.rating === rating);
+            });
+        }
+        
+        // 抽取问题
+        async function drawQuestion() {
+            // 禁用按钮
+            elements.drawBtn.disabled = true;
+            elements.cardContent.innerHTML = '<div class="loading-spinner"></div>';
+            elements.cardContent.classList.remove('has-content', 'no-content');
+            showOriginal = false;
+
+            try {
+                // 获取问题
+                const question = await fetchOnlineQuestion();
+                
+                // 保存英文原文
+                originalEnglishText = question.text;
+                
+                // 翻译成中文
+                const translated = await translateText(question.text);
+                translatedChineseText = translated;
+                
+                // 显示翻译结果
+                elements.cardContent.textContent = translated;
+                elements.cardContent.classList.add('has-content');
+                
+                // 重新启用按钮
+                elements.drawBtn.disabled = false;
+            } catch (error) {
+                elements.cardContent.textContent = error.message || '获取失败，请检查网络连接';
+                elements.cardContent.classList.add('no-content');
+                elements.drawBtn.disabled = false;
+            }
+        }
+        
+        // 获取在线问题
+        async function fetchOnlineQuestion() {
+            const config = gameConfig[currentGame];
+            const url = `https://api.truthordarebot.xyz/v1${config.apiEndpoint}?rating=${currentRating}`;
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error('API请求失败');
+            }
+            
+            const data = await response.json();
+            
+            return {
+                text: data.question,
+                difficulty: data.rating
+            };
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            // 缓存所有DOM元素引用
+            elements.drawBtn = document.getElementById('drawBtn');
+            elements.cardIcon = document.getElementById('cardIcon');
+            elements.cardContent = document.getElementById('cardContent');
+            
+            // 使用事件委托绑定游戏按钮（减少事件监听器数量）
+            document.querySelector('.game-selector').addEventListener('click', (e) => {
+                const btn = e.target.closest('.game-btn');
+                if (btn && btn.dataset.game) {
+                    switchGame(btn.dataset.game);
+                }
+            });
+            
+            // 使用事件委托绑定难度按钮
+            document.querySelector('.rating-selector').addEventListener('click', (e) => {
+                const btn = e.target.closest('.rating-btn');
+                if (btn && btn.dataset.rating) {
+                    switchRating(btn.dataset.rating);
+                }
+            });
+            
+            // 绑定抽取按钮
+            elements.drawBtn.addEventListener('click', drawQuestion);
+            
+            // 点击卡片内容切换中英文
+            elements.cardContent.addEventListener('click', toggleLanguage);
+        });
+    </script>
+</body>
+</html>
