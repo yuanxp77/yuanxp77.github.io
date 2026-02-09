@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聚会游戏工具</title>
+    <title>欢乐派对</title>
     <style>
         * {
             margin: 0;
@@ -68,16 +68,6 @@
         .menu-item:active {
             transform: scale(0.98);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .menu-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .menu-item .icon {
@@ -156,26 +146,13 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎉 聚会游戏工具</h1>
-            <p>让每次聚会都充满欢乐</p>
-        </div>
 
         <div class="menu-grid">
-            <a href="lottery.html" class="menu-item">
-                <div class="icon">🎲</div>
-                <div class="content">
-                    <h3>幸运抽奖</h3>
-                    <p>随机抽取幸运儿，公平公正</p>
-                </div>
-                <div class="arrow">›</div>
-            </a>
-
             <a href="roulette.html" class="menu-item">
-                <div class="icon">🎯</div>
+                <div class="icon">🔫</div>
                 <div class="content">
-                    <h3>转盘抽奖</h3>
-                    <p>旋转转盘，看谁是今天的幸运星</p>
+                    <h3>俄罗斯轮盘赌</h3>
+                    <p>紧张刺激的惩罚游戏，看看谁会中枪</p>
                 </div>
                 <div class="arrow">›</div>
             </a>
@@ -188,37 +165,6 @@
                 </div>
                 <div class="arrow">›</div>
             </a>
-
-            <a href="dice.html" class="menu-item">
-                <div class="icon">🎲</div>
-                <div class="content">
-                    <h3>摇骰子</h3>
-                    <p>简单有趣的骰子游戏</p>
-                </div>
-                <div class="arrow">›</div>
-            </a>
-
-            <a href="random-team.html" class="menu-item">
-                <div class="icon">👥</div>
-                <div class="content">
-                    <h3>随机分组</h3>
-                    <p>快速随机分配队伍</p>
-                </div>
-                <div class="arrow">›</div>
-            </a>
-
-            <a href="number-bomb.html" class="menu-item">
-                <div class="icon">💣</div>
-                <div class="content">
-                    <h3>数字炸弹</h3>
-                    <p>紧张刺激的猜数字游戏</p>
-                </div>
-                <div class="arrow">›</div>
-            </a>
-        </div>
-
-        <div class="footer">
-            <p>💡 提示：点击任意工具开始游戏</p>
         </div>
     </div>
 </body>
