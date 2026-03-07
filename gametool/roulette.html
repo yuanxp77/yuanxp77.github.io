@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俄罗斯轮盘赌</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            min-height: 100vh;
+            padding: 60px 15px 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .settings-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setting-row {
+            margin-bottom: 20px;
+        }
+
+        .setting-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            display: block;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .adjust-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .adjust-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .adjust-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .adjust-btn:disabled:active {
+            transform: none;
+        }
+
+        .value-display {
+            min-width: 60px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            display: none;
+        }
+
+        .revolver-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 320px;
+            position: relative;
+        }
+
+        .revolver {
+            width: 240px;
+            height: 240px;
+            position: relative;
+            transition: transform 0.3s ease-out;
+            cursor: grab;
+            user-select: none;
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
+        }
+
+        .revolver.game-over {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .revolver:active {
+            cursor: grabbing;
+        }
+        
+        .revolver.game-over:active {
+            cursor: not-allowed;
+        }
+
+        .revolver.spinning {
+            animation: spin 1s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(720deg); }
+        }
+
+        .cylinder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: 
+                radial-gradient(circle at 30% 30%, #6a6a6a 0%, transparent 50%),
+                radial-gradient(circle, #4a4a4a 0%, #2a2a2a 50%, #1a1a1a 100%);
+            border: 6px solid #555;
+            position: relative;
+            box-shadow: 
+                inset 0 0 30px rgba(0, 0, 0, 0.8),
+                inset 0 0 10px rgba(255, 255, 255, 0.1),
+                0 15px 50px rgba(0, 0, 0, 0.9);
+        }
+
+        .cylinder::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .chamber {
+            width: 36px;
+            height: 36px;
+            background: 
+                radial-gradient(circle at 30% 30%, #3a3a3a 0%, #1a1a1a 100%);
+            border: 3px solid #555;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            box-shadow: 
+                inset 0 2px 5px rgba(0, 0, 0, 0.8),
+                inset 0 -2px 3px rgba(255, 255, 255, 0.1),
+                0 3px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .chamber::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .chamber.target {
+            background: 
+                radial-gradient(circle at 30% 30%, #FF8C42 0%, #FF6B35 100%);
+            border: 4px solid #FFD700;
+            box-shadow: 
+                0 0 25px rgba(255, 215, 0, 0.9), 
+                0 0 40px rgba(255, 107, 53, 0.7),
+                inset 0 2px 8px rgba(255, 140, 66, 0.6),
+                inset 0 -2px 5px rgba(0, 0, 0, 0.4);
+            transform: translate(var(--x), var(--y)) translate(-50%, -50%) scale(1.25);
+            z-index: 5;
+            animation: target-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes target-pulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 25px rgba(255, 215, 0, 0.9), 
+                    0 0 40px rgba(255, 107, 53, 0.7),
+                    inset 0 2px 8px rgba(255, 140, 66, 0.6),
+                    inset 0 -2px 5px rgba(0, 0, 0, 0.4);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 35px rgba(255, 215, 0, 1), 
+                    0 0 50px rgba(255, 107, 53, 0.9),
+                    inset 0 2px 10px rgba(255, 140, 66, 0.8),
+                    inset 0 -2px 5px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        .chamber.bullet {
+            background: 
+                radial-gradient(circle at 30% 30%, #B22222 0%, #8B0000 100%);
+            border-color: #FF0000;
+            box-shadow: 
+                0 0 15px rgba(255, 0, 0, 0.6),
+                inset 0 2px 5px rgba(178, 34, 34, 0.5),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        .chamber.fired-safe {
+            background: 
+                radial-gradient(circle at 30% 30%, #43A047 0%, #2e7d32 100%);
+            border: 3px solid #4CAF50;
+            box-shadow: 
+                0 0 15px rgba(76, 175, 80, 0.6),
+                inset 0 2px 5px rgba(67, 160, 71, 0.5),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .chamber.fired-danger {
+            background: 
+                radial-gradient(circle at 30% 30%, #D32F2F 0%, #B71C1C 100%);
+            border: 3px solid #FF0000;
+            box-shadow: 
+                0 0 25px rgba(255, 0, 0, 0.9),
+                0 0 40px rgba(255, 68, 68, 0.6),
+                inset 0 2px 8px rgba(211, 47, 47, 0.6),
+                inset 0 -2px 5px rgba(0, 0, 0, 0.6);
+            animation: danger-pulse 0.5s ease-in-out;
+        }
+
+        @keyframes danger-pulse {
+            0%, 100% { transform: translate(var(--x), var(--y)) translate(-50%, -50%) scale(1); }
+            50% { transform: translate(var(--x), var(--y)) translate(-50%, -50%) scale(1.3); }
+        }
+
+        .center-dot {
+            width: 50px;
+            height: 50px;
+            background: 
+                radial-gradient(circle at 35% 35%, #666 0%, #333 50%, #222 100%);
+            border: 4px solid #777;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            cursor: pointer;
+            box-shadow: 
+                inset 0 3px 8px rgba(0, 0, 0, 0.9),
+                inset 0 -2px 5px rgba(255, 255, 255, 0.1),
+                0 5px 15px rgba(0, 0, 0, 0.7);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .center-dot:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .center-dot:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        .center-dot::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info-text {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .info-subtext {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .result-text {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .result-safe {
+            color: #4CAF50;
+        }
+
+        .result-danger {
+            color: #FF4444;
+            animation: pulse 1s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 400px) {
+            .revolver-container {
+                padding: 25px;
+                min-height: 280px;
+            }
+
+            .revolver {
+                width: 200px;
+                height: 200px;
+            }
+
+            .chamber {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+
+            .center-dot {
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-btn">← 返回</a>
+    
+    <div class="container">
+        <div class="settings-panel" id="settingsPanel">
+            <div class="setting-row">
+                <label class="setting-label">弹仓容量</label>
+                <div class="input-group">
+                    <button class="adjust-btn" id="chambersDown">−</button>
+                    <div class="value-display" id="chambersDisplay">6</div>
+                    <button class="adjust-btn" id="chambersUp">+</button>
+                    <input type="number" id="chambers" min="3" max="8" value="6">
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <label class="setting-label">子弹数量</label>
+                <div class="input-group">
+                    <button class="adjust-btn" id="bulletsDown">−</button>
+                    <div class="value-display" id="bulletsDisplay">1</div>
+                    <button class="adjust-btn" id="bulletsUp">+</button>
+                    <input type="number" id="bullets" min="1" max="6" value="1">
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group" id="startBtnGroup" style="margin-bottom: 20px;">
+            <button class="btn btn-primary" id="startBtn">
+                开始游戏
+            </button>
+        </div>
+
+        <div id="gameArea" style="display: none;">
+            <div class="revolver-container">
+                <div class="revolver" id="revolver">
+                    <div class="cylinder" id="cylinder"></div>
+                    <div class="center-dot"></div>
+                </div>
+            </div>
+
+            <div class="info-panel" id="infoPanel">
+                <div class="info-text">准备就绪</div>
+                <div class="info-subtext">配置：<span id="configInfo"></span></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" id="fireBtn">
+                    🔫 开火
+                </button>
+                <button class="btn btn-secondary" id="resetBtn">
+                    🔄 重置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chambers = 6;
+        let bullets = 1;
+        let bulletPositions = [];
+        let currentPosition = 0;
+        let firedPositions = []; // 记录已开火的位置
+        let gameStarted = false; // 游戏是否已开始
+        let currentRotation = 0; // 当前转轮旋转角度
+        let isDragging = false;
+        let startAngle = 0;
+        let lastAngle = 0;
+        let gameOver = false; // 游戏是否结束（命中后）
+        let velocity = 0; // 旋转速度
+        let lastTime = 0; // 上次更新时间
+        let animationFrame = null; // 动画帧ID
+
+        // 更新调整按钮状态
+        function updateAdjustButtons() {
+            const chambersValue = parseInt(document.getElementById('chambers').value);
+            const bulletsValue = parseInt(document.getElementById('bullets').value);
+            
+            // 更新显示
+            document.getElementById('chambersDisplay').textContent = chambersValue;
+            document.getElementById('bulletsDisplay').textContent = bulletsValue;
+            
+            // 弹仓容量按钮
+            document.getElementById('chambersDown').disabled = chambersValue <= 3;
+            document.getElementById('chambersUp').disabled = chambersValue >= 8;
+            
+            // 子弹数量按钮
+            document.getElementById('bulletsDown').disabled = bulletsValue <= 1;
+            document.getElementById('bulletsUp').disabled = bulletsValue >= chambersValue;
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (!initRevolver()) {
+                return;
+            }
+
+            gameStarted = true;
+            
+            // 隐藏配置面板和开始按钮
+            document.getElementById('settingsPanel').style.display = 'none';
+            document.getElementById('startBtnGroup').style.display = 'none';
+            
+            // 显示游戏区域
+            document.getElementById('gameArea').style.display = 'block';
+            
+            // 更新配置信息
+            document.getElementById('configInfo').textContent = `${chambers}格弹仓，${bullets}颗子弹`;
+            
+            // 更新提示信息
+            document.getElementById('infoPanel').innerHTML = `
+                <div class="info-text">准备就绪</div>
+                <div class="info-subtext">旋转转轮选择位置，高亮弹仓即为射击目标</div>
+            `;
+            
+            // 禁用参数输入
+            document.getElementById('chambers').disabled = true;
+            document.getElementById('bullets').disabled = true;
+            
+            // 初始化拖拽功能
+            initDragRotation();
+        }
+
+        // 初始化拖拽旋转功能
+        function initDragRotation() {
+            const revolver = document.getElementById('revolver');
+            const revolverContainer = revolver.parentElement;
+            
+            function getAngle(event, element) {
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                let clientX, clientY;
+                if (event.touches) {
+                    clientX = event.touches[0].clientX;
+                    clientY = event.touches[0].clientY;
+                } else {
+                    clientX = event.clientX;
+                    clientY = event.clientY;
+                }
+                
+                const deltaX = clientX - centerX;
+                const deltaY = clientY - centerY;
+                return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+            }
+            
+            function handleStart(event) {
+                if (revolver.classList.contains('spinning') || gameOver) return;
+                
+                // 如果点击的是中心转轴，不启动拖拽
+                const target = event.target;
+                if (target.classList.contains('center-dot') || target.closest('.center-dot')) {
+                    return;
+                }
+                
+                // 取消惯性动画
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                    animationFrame = null;
+                }
+                
+                isDragging = true;
+                velocity = 0;
+                startAngle = getAngle(event, revolverContainer);
+                lastAngle = startAngle;
+                lastTime = Date.now();
+                revolver.style.transition = 'none';
+            }
+            
+            function handleMove(event) {
+                if (!isDragging || gameOver) return;
+                event.preventDefault();
+                
+                const currentAngle = getAngle(event, revolverContainer);
+                const deltaAngle = currentAngle - lastAngle;
+                const currentTime = Date.now();
+                const deltaTime = currentTime - lastTime;
+                
+                // 计算速度（角度/毫秒）
+                if (deltaTime > 0) {
+                    velocity = deltaAngle / deltaTime;
+                }
+                
+                currentRotation += deltaAngle;
+                revolver.style.transform = `rotate(${currentRotation}deg)`;
+                
+                lastAngle = currentAngle;
+                lastTime = currentTime;
+                
+                // 更新弹仓文字方向和高亮
+                updateChamberRotation();
+                
+                // 计算当前指向的弹仓
+                updateCurrentPosition();
+            }
+            
+            function handleEnd() {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                // 根据速度启动惯性滚动
+                if (Math.abs(velocity) > 0.1) {
+                    startInertiaAnimation();
+                } else {
+                    // 速度太小，直接吸附
+                    snapToNearest();
+                }
+            }
+            
+            // 鼠标事件
+            revolver.addEventListener('mousedown', handleStart);
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', handleEnd);
+            
+            // 触摸事件
+            revolver.addEventListener('touchstart', handleStart, { passive: false });
+            document.addEventListener('touchmove', handleMove, { passive: false });
+            document.addEventListener('touchend', handleEnd);
+        }
+        
+        // 惯性滚动动画
+        function startInertiaAnimation() {
+            const revolver = document.getElementById('revolver');
+            const friction = 0.95; // 摩擦系数，越小减速越快
+            const minVelocity = 0.05; // 最小速度阈值
+            
+            function animate() {
+                // 应用摩擦力
+                velocity *= friction;
+                
+                // 更新旋转角度
+                currentRotation += velocity * 16; // 假设16ms一帧
+                revolver.style.transform = `rotate(${currentRotation}deg)`;
+                
+                // 更新弹仓文字方向和高亮
+                updateChamberRotation();
+                updateCurrentPosition();
+                
+                // 如果速度还够大，继续动画
+                if (Math.abs(velocity) > minVelocity) {
+                    animationFrame = requestAnimationFrame(animate);
+                } else {
+                    // 速度降到很低，停止并吸附
+                    animationFrame = null;
+                    snapToNearest();
+                }
+            }
+            
+            animationFrame = requestAnimationFrame(animate);
+        }
+        
+        // 更新当前位置（计算正上方箭头指向的弹仓）
+        function updateCurrentPosition() {
+            currentPosition = getTopChamberIndex();
+        }
+        
+        // 吸附到最近的弹仓
+        function snapToNearest() {
+            const revolver = document.getElementById('revolver');
+            const anglePerChamber = 360 / chambers;
+            
+            // 计算最近的弹仓角度
+            const targetAngle = Math.round(currentRotation / anglePerChamber) * anglePerChamber;
+            
+            // 计算需要旋转的角度
+            const angleDiff = targetAngle - currentRotation;
+            const duration = Math.min(Math.abs(angleDiff) * 2, 300); // 根据角度差计算时长，最大300ms
+            
+            revolver.style.transition = `transform ${duration}ms ease-out`;
+            revolver.style.transform = `rotate(${targetAngle}deg)`;
+            currentRotation = targetAngle;
+            
+            updateCurrentPosition();
+            
+            // 更新弹仓文字方向
+            setTimeout(() => {
+                updateChamberRotation();
+            }, 50);
+        }
+
+        // 初始化转轮
+        function initRevolver() {
+            const chambersCount = parseInt(document.getElementById('chambers').value) || 6;
+            const bulletsCount = parseInt(document.getElementById('bullets').value) || 1;
+
+            // 验证参数
+            if (chambersCount < 3 || chambersCount > 8) {
+                alert('弹仓容量必须在3-8之间');
+                return false;
+            }
+
+            if (bulletsCount < 1 || bulletsCount > chambersCount) {
+                alert(`子弹数量必须在1-${chambersCount}之间`);
+                return false;
+            }
+
+            chambers = chambersCount;
+            bullets = bulletsCount;
+
+            // 随机生成子弹位置
+            bulletPositions = [];
+            const positions = Array.from({ length: chambers }, (_, i) => i);
+            for (let i = 0; i < bullets; i++) {
+                const randomIndex = Math.floor(Math.random() * positions.length);
+                bulletPositions.push(positions[randomIndex]);
+                positions.splice(randomIndex, 1);
+            }
+
+            currentPosition = 0;
+            firedPositions = []; // 重置开火记录
+
+            // 渲染转轮
+            renderCylinder();
+
+            return true;
+        }
+
+        // 渲染弹仓
+        function renderCylinder() {
+            const cylinder = document.getElementById('cylinder');
+            cylinder.innerHTML = '';
+
+            const angleStep = 360 / chambers;
+            const radius = 70;
+
+            for (let i = 0; i < chambers; i++) {
+                const chamber = document.createElement('div');
+                chamber.className = 'chamber';
+                chamber.dataset.index = i;
+                
+                // 第0个弹仓在正上方（-90度位置）
+                const angle = (i * angleStep - 90) * (Math.PI / 180);
+                const x = radius * Math.cos(angle);
+                const y = radius * Math.sin(angle);
+                
+                chamber.style.setProperty('--x', `${x}px`);
+                chamber.style.setProperty('--y', `${y}px`);
+                
+                // 创建内容容器，让数字保持正向
+                const content = document.createElement('div');
+                content.style.position = 'absolute';
+                content.style.width = '100%';
+                content.style.height = '100%';
+                content.style.display = 'flex';
+                content.style.alignItems = 'center';
+                content.style.justifyContent = 'center';
+                
+                chamber.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+                
+                // 检查是否已开火
+                const firedRecord = firedPositions.find(f => f.position === i);
+                if (firedRecord) {
+                    if (firedRecord.isBullet) {
+                        chamber.classList.add('fired-danger');
+                        content.textContent = '💥';
+                    } else {
+                        chamber.classList.add('fired-safe');
+                        content.textContent = '✓';
+                    }
+                } else {
+                    content.textContent = i + 1;
+                }
+
+                chamber.appendChild(content);
+                cylinder.appendChild(chamber);
+            }
+            
+            // 更新所有弹仓的文字方向，抵消转轮旋转
+            updateChamberRotation();
+        }
+        
+        // 更新弹仓内容的旋转，保持文字始终正向
+        function updateChamberRotation(skipHighlight = false) {
+            const chamberElements = document.querySelectorAll('.chamber');
+            const targetIndex = getTopChamberIndex();
+            
+            chamberElements.forEach((chamber, idx) => {
+                const content = chamber.querySelector('div');
+                if (content) {
+                    content.style.transform = `rotate(${-currentRotation}deg)`;
+                }
+                
+                // 高亮显示准备射击的弹仓（除非在随机旋转中）
+                if (!skipHighlight) {
+                    const chamberIndex = parseInt(chamber.dataset.index);
+                    if (!gameOver && chamberIndex === targetIndex && !firedPositions.find(f => f.position === chamberIndex)) {
+                        chamber.classList.add('target');
+                    } else {
+                        chamber.classList.remove('target');
+                    }
+                } else {
+                    // 随机旋转期间移除所有高亮
+                    chamber.classList.remove('target');
+                }
+            });
+        }
+        
+        // 获取正上方的弹仓索引
+        function getTopChamberIndex() {
+            const anglePerChamber = 360 / chambers;
+            // 将旋转角度标准化到0-360
+            let normalizedAngle = ((-currentRotation % 360) + 360) % 360;
+            // 正上方是弹仓0，每旋转anglePerChamber度就到下一个弹仓
+            let index = Math.round(normalizedAngle / anglePerChamber) % chambers;
+            return index;
+        }
+
+        // 开火
+        function fire() {
+            const fireBtn = document.getElementById('fireBtn');
+            const infoPanel = document.getElementById('infoPanel');
+
+            // 获取正上方的弹仓索引
+            const targetPosition = getTopChamberIndex();
+
+            // 检查当前位置是否已经开过火
+            if (firedPositions.find(f => f.position === targetPosition)) {
+                infoPanel.innerHTML = `
+                    <div class="info-text">⚠️ 这个位置已经开过火了</div>
+                    <div class="info-subtext">请旋转转轮选择其他位置（弹仓${targetPosition + 1}）</div>
+                `;
+                return;
+            }
+
+            // 禁用按钮和拖拽
+            fireBtn.disabled = true;
+            isDragging = false;
+
+            // 检查是否中弹
+            const isBullet = bulletPositions.includes(targetPosition);
+
+            // 记录开火位置
+            firedPositions.push({
+                position: targetPosition,
+                isBullet: isBullet
+            });
+
+            // 重新渲染转轮以显示开火记录
+            renderCylinder();
+
+            // 显示结果
+            if (isBullet) {
+                gameOver = true; // 游戏结束
+                fireBtn.disabled = true; // 永久禁用开火按钮
+                
+                // 添加游戏结束样式
+                document.getElementById('revolver').classList.add('game-over');
+                
+                infoPanel.innerHTML = `
+                    <div class="result-text result-danger">💥 砰！</div>
+                    <div class="info-subtext">弹仓${targetPosition + 1}中弹了！游戏结束，请点击重置</div>
+                `;
+            } else {
+                infoPanel.innerHTML = `
+                    <div class="result-text result-safe">✅ 安全</div>
+                    <div class="info-subtext">弹仓${targetPosition + 1}是安全的，旋转转轮继续下一轮</div>
+                `;
+                
+                // 重新启用按钮
+                setTimeout(() => {
+                    fireBtn.disabled = false;
+                }, 500);
+            }
+
+            // 如果打完所有弹仓（没有命中的情况）
+            if (!gameOver && firedPositions.length === chambers) {
+                gameOver = true;
+                fireBtn.disabled = true;
+                document.getElementById('revolver').classList.add('game-over');
+                setTimeout(() => {
+                    infoPanel.innerHTML = `
+                        <div class="info-text">全部安全通过！</div>
+                        <div class="info-subtext">点击重置开始新一轮</div>
+                    `;
+                }, 2000);
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            if (!initRevolver()) {
+                return;
+            }
+
+            const revolver = document.getElementById('revolver');
+            const infoPanel = document.getElementById('infoPanel');
+            const fireBtn = document.getElementById('fireBtn');
+            
+            // 重置游戏状态
+            gameOver = false;
+            fireBtn.disabled = false;
+            revolver.classList.remove('game-over');
+            
+            // 重置旋转角度
+            currentRotation = 0;
+            revolver.style.transform = 'rotate(0deg)';
+            
+            infoPanel.innerHTML = `
+                <div class="info-text">游戏已重置</div>
+                <div class="info-subtext">旋转转轮选择位置，然后开火</div>
+            `;
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            const chambersInput = document.getElementById('chambers');
+            const bulletsInput = document.getElementById('bullets');
+            
+            // 初始化按钮状态
+            updateAdjustButtons();
+            
+            // 弹仓容量调整
+            document.getElementById('chambersDown').addEventListener('click', function() {
+                const value = parseInt(chambersInput.value);
+                if (value > 3) {
+                    chambersInput.value = value - 1;
+                    
+                    // 如果子弹数量超过弹仓容量，自动调整
+                    const currentBullets = parseInt(bulletsInput.value);
+                    if (currentBullets > value - 1) {
+                        bulletsInput.value = value - 1;
+                    }
+                    
+                    updateAdjustButtons();
+                }
+            });
+            
+            document.getElementById('chambersUp').addEventListener('click', function() {
+                const value = parseInt(chambersInput.value);
+                if (value < 8) {
+                    chambersInput.value = value + 1;
+                    updateAdjustButtons();
+                }
+            });
+            
+            // 子弹数量调整
+            document.getElementById('bulletsDown').addEventListener('click', function() {
+                const value = parseInt(bulletsInput.value);
+                if (value > 1) {
+                    bulletsInput.value = value - 1;
+                    updateAdjustButtons();
+                }
+            });
+            
+            document.getElementById('bulletsUp').addEventListener('click', function() {
+                const value = parseInt(bulletsInput.value);
+                const maxBullets = parseInt(chambersInput.value);
+                if (value < maxBullets) {
+                    bulletsInput.value = value + 1;
+                    updateAdjustButtons();
+                }
+            });
+            
+            // 随机旋转到未开火的弹仓
+            let isRandomSpinning = false; // 标记是否正在随机旋转
+            
+            function randomSpin() {
+                if (!gameStarted || gameOver || isRandomSpinning) return;
+                
+                // 获取所有未开火的弹仓索引
+                const unfiredChambers = [];
+                for (let i = 0; i < chambers; i++) {
+                    if (!firedPositions.find(f => f.position === i)) {
+                        unfiredChambers.push(i);
+                    }
+                }
+                
+                if (unfiredChambers.length === 0) {
+                    document.querySelector('.info-text').textContent = '所有弹仓已开火！';
+                    return;
+                }
+                
+                // 随机选择一个未开火的弹仓
+                const targetIndex = unfiredChambers[Math.floor(Math.random() * unfiredChambers.length)];
+                
+                // 计算目标角度
+                // 弹仓索引0在-90度位置（正上方）
+                // 每个弹仓的角度间隔
+                const anglePerChamber = 360 / chambers;
+                // 目标弹仓应该旋转到-90度位置
+                // 如果targetIndex=0，应该是-90度
+                // 如果targetIndex=1，应该是-90-anglePerChamber度
+                let targetAngle = -90 - (targetIndex * anglePerChamber);
+                
+                // 添加5-8圈旋转，增加视觉效果
+                const extraRotations = Math.floor(5 + Math.random() * 3) * 360;
+                
+                // 从当前角度计算，确保最终停在精确位置
+                // 找到离当前角度最近的、能让targetIndex在顶部的角度
+                let finalAngle = targetAngle;
+                while (finalAngle > currentRotation) {
+                    finalAngle -= 360;
+                }
+                finalAngle -= extraRotations;
+                
+                // 禁用按钮和拖拽
+                document.getElementById('fireBtn').disabled = true;
+                isDragging = false;
+                isRandomSpinning = true;
+                
+                // 更新提示信息
+                document.querySelector('.info-text').textContent = '随机旋转中...';
+                
+                // 使用CSS过渡实现旋转动画，使用更平滑的缓动曲线
+                const revolver = document.querySelector('.revolver');
+                revolver.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+                currentRotation = finalAngle;
+                revolver.style.transform = `rotate(${currentRotation}deg)`;
+                
+                // 动画期间更新弹仓内容旋转（但不更新高亮）
+                let animationStartTime = Date.now();
+                const animationDuration = 4000;
+                
+                function updateDuringAnimation() {
+                    const elapsed = Date.now() - animationStartTime;
+                    if (elapsed < animationDuration) {
+                        // 只更新弹仓内容的旋转，不更新高亮
+                        updateChamberRotation(true); // 传入true表示跳过高亮更新
+                        requestAnimationFrame(updateDuringAnimation);
+                    } else {
+                        // 动画结束，确保精确对齐
+                        revolver.style.transition = '';
+                        
+                        // 精确对齐到最近的弹仓位置
+                        const anglePerChamber = 360 / chambers;
+                        const alignedAngle = Math.round(currentRotation / anglePerChamber) * anglePerChamber;
+                        currentRotation = alignedAngle;
+                        revolver.style.transform = `rotate(${alignedAngle}deg)`;
+                        
+                        isRandomSpinning = false;
+                        updateChamberRotation(); // 现在更新高亮
+                        document.getElementById('fireBtn').disabled = false;
+                        document.querySelector('.info-text').textContent = '已随机选择弹仓，可以开火！';
+                    }
+                }
+                
+                requestAnimationFrame(updateDuringAnimation);
+            }
+            
+            // 绑定按钮
+            document.getElementById('startBtn').addEventListener('click', startGame);
+            document.getElementById('fireBtn').addEventListener('click', fire);
+            document.getElementById('resetBtn').addEventListener('click', resetGame);
+            
+            // 点击中心转轴触发随机旋转（支持触摸和鼠标）
+            const centerDot = document.querySelector('.center-dot');
+            let centerDotTouchStarted = false;
+            
+            // 触摸开始（手机端）- 标记触摸开始
+            centerDot.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+                centerDotTouchStarted = true;
+            }, { passive: false });
+            
+            // 触摸结束（手机端）
+            centerDot.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (centerDotTouchStarted && gameStarted && !gameOver && !isRandomSpinning) {
+                    randomSpin();
+                }
+                centerDotTouchStarted = false;
+            }, { passive: false });
+            
+            // 鼠标点击
+            centerDot.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (gameStarted && !gameOver && !isRandomSpinning) {
+                    randomSpin();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
